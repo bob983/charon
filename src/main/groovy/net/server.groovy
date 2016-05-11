@@ -10,9 +10,10 @@ def vertx = Vertx.vertx([
 
 def server = vertx.createHttpServer()
 def router = Router.router(vertx)
-def proxy = new Proxy(vertx: vertx, host: 'localhost', port: 9090)
+def proxy = new Proxy(vertx, 'localhost', 9090)
 
 router.route().handler { routingContext ->
+    def req = routingContext.request()
     routingContext.request().pause()
     routingContext.next()
 }

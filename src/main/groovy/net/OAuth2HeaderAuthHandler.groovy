@@ -13,6 +13,7 @@ class OAuth2HeaderAuthHandler implements Handler<RoutingContext> {
             port: 32768
     ]
     RedisClient redis
+    Random random = new Random()
 
     OAuth2HeaderAuthHandler(Vertx vertx) {
         this.redis = RedisClient.create(vertx, reditConfig)
@@ -22,27 +23,24 @@ class OAuth2HeaderAuthHandler implements Handler<RoutingContext> {
     void handle(RoutingContext context) {
         def request = context.request();
         String authorization = request.headers().get(HttpHeaders.AUTHORIZATION.toString());
-        println "Authorizataion is $authorization"
-
         if (authorization == null) {
             handle401(context);
         } else {
             def authHeaderKey = "key_" + authorization
+            def companyId = random.nextInt(10)
+            //println "Hm $companyId"
             redis.get(authHeaderKey) { response ->
                 if (response.succeeded() && response.result() != null) {
-                    println "Key is in cache"
                     context.put("userId", response.result())
-                    context.put("companyId", 10);
+                    context.put("companyId", companyId);
                 } else {
-                    println "Pretending to call external service, because key is not in cache"
                     if (authorization.startsWith("allow")) {
-                        println "Adding key to cache"
                         redis.set(authHeaderKey, "2") {
                             println "Setting expire to 30s"
                             redis.expire(authHeaderKey, 30) {}
                         }
                         context.put("userId", "2")
-                        context.put("companyId", 10);
+                        context.put("companyId", companyId);
                     } else {
                         handle401(context)
                     }

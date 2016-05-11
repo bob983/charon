@@ -21,16 +21,13 @@ class RateLimitHandler implements Handler<RoutingContext> {
     void handle(RoutingContext context) {
         def companyId = context.get("companyId")
         def rateKey = "rate_company_$companyId"
-        println "Checking rate limit for $rateKey"
         redis.incr(rateKey) { response ->
             if(response.failed()) {
                 context.fail(500)
                 println "Error ${response.cause()}"
             }
-            println "Incremented rate for $rateKey to ${response.result()}"
             redis.expire(rateKey, 60) {}
-            if (response.result() > 100) {
-                println "Rate limit reached"
+            if (response.result() > 100000000) {
                 handle429(context)
             }
             context.next()

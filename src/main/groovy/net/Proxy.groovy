@@ -2,13 +2,14 @@ package net
 
 class Proxy {
 
-    def vertx
-    def host
-    def port = 80
+    def client
+
+    Proxy(vertx, host, port) {
+        client = vertx.createHttpClient(defaultHost: host, defaultPort: port, ssl: false)
+    }
 
     def proxyRequest(routingContext) {
         def request = routingContext.request();
-        def client = vertx.createHttpClient(defaultHost: host, defaultPort: port, ssl: false)
         def upstream = client.request(request.method(), request.path()) { response ->
 
             request.response().chunked = true
